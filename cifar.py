@@ -40,6 +40,8 @@ import torch.nn.functional as F
 from torchvision import datasets
 from torchvision import transforms
 
+print("CIFAR STARTED!")
+
 parser = argparse.ArgumentParser(
     description='Trains a CIFAR Classifier',
     formatter_class=argparse.ArgumentDefaultsHelpFormatter)
