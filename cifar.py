@@ -443,7 +443,7 @@ def main():
     save_path = os.path.join(args.save, f'checkpoint_{args.model}_{args.optimizer}.pth.tar')
     torch.save(checkpoint, save_path)
     if is_best:
-      shutil.copyfile(save_path, os.path.join(args.save, 'model_best_{args.model}_{args.optimizer}.pth.tar'))
+      shutil.copyfile(save_path, os.path.join(args.save, f'model_best_{args.model}_{args.optimizer}.pth.tar'))
 
     with open(log_path, 'a') as f:
       f.write('%03d,%05d,%0.6f,%0.5f,%0.2f\n' % (
