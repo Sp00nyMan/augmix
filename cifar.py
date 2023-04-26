@@ -419,7 +419,7 @@ def main():
   with open(log_path, 'w') as f:
     f.write('epoch,time(s),train_loss,test_loss,test_error(%)\n')
 
-  writer = SummaryWriter(os.path.join(args.save, "tensorboard", args.model))
+  writer = SummaryWriter(os.path.join(args.save, "tensorboard", args.model + "_" + args.optimizer))
 
   best_acc = 0
   print('Beginning training from epoch:', start_epoch + 1)
