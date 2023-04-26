@@ -39,6 +39,7 @@ from torchvision.models import resnet18
 import torch
 import torch.backends.cudnn as cudnn
 import torch.nn.functional as F
+from torch.utils.tensorboard import SummaryWriter
 from torchvision import datasets
 from torchvision import transforms
 
@@ -66,6 +67,16 @@ parser.add_argument(
 # Optimization options
 parser.add_argument(
     '--epochs', '-e', type=int, default=100, help='Number of epochs to train.')
+parser.add_argument(
+  "--optimizer", "-o", 
+   type=str, default="SGD", 
+   choices=["SGD", "AdamW"], help="Training Optimizer."
+)
+parser.add_argument(
+  "--scheduler", "-sc", 
+   type=str, default="exp", 
+   choices=["exp", "cosine"], help="Learning Rate Scheduler."
+)
 parser.add_argument(
     '--learning-rate',
     '-lr',
@@ -350,12 +361,18 @@ def main():
   elif args.model == 'convnext':
     net = convnext_tiny(args.pre_trained)
 
-  optimizer = torch.optim.SGD(
-      net.parameters(),
-      args.learning_rate,
-      momentum=args.momentum,
-      weight_decay=args.decay,
-      nesterov=True)
+  if args.optimizer == "SGD":
+    optimizer = torch.optim.SGD(
+        net.parameters(),
+        args.learning_rate,
+        momentum=args.momentum,
+        weight_decay=args.decay,
+        nesterov=True)
+  elif args.optimizer == "AdamW":
+    optimizer = torch.optim.AdamW(
+        net.parameters(),
+        args.learning_rate,
+        weight_decay=args.decay)
 
   # Distribute model across all visible GPUs
   net = torch.nn.DataParallel(net).cuda()
@@ -381,14 +398,16 @@ def main():
     test_c_acc = test_c(net, test_data, base_c_path)
     print('Mean Corruption Error: {:.3f}'.format(100 - 100. * test_c_acc))
     return
-
-  scheduler = torch.optim.lr_scheduler.LambdaLR(
+  if args.scheduler == "exp":
+    scheduler = torch.optim.lr_scheduler.LambdaLR(
+        optimizer,
+        lr_lambda=lambda epoch: args.learning_rate * np.exp(-0.1*epoch))
+  elif args.scheduler == "cosine":
+    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
       optimizer,
-      lr_lambda=lambda step: get_lr(  # pylint: disable=g-long-lambda
-          step,
-          args.epochs * len(train_loader),
-          1,  # lr_lambda computes multiplicative factor
-          1e-6 / args.learning_rate))
+      args.epochs * len(train_loader),
+      1e-6 / args.learning_rate
+    )
 
   if not os.path.exists(args.save):
     os.makedirs(args.save)
@@ -399,6 +418,8 @@ def main():
                           args.dataset + '_' + args.model + '_training_log.csv')
   with open(log_path, 'w') as f:
     f.write('epoch,time(s),train_loss,test_loss,test_error(%)\n')
+
+  writer = SummaryWriter(os.path.join(args.save, "tensorboard", args.model))
 
   best_acc = 0
   print('Beginning training from epoch:', start_epoch + 1)
@@ -438,6 +459,10 @@ def main():
         ' Test Error {4:.2f}'
         .format((epoch + 1), int(time.time() - begin_time), train_loss_ema,
                 test_loss, 100 - 100. * test_acc))
+
+    writer.add_scalar("Train/Loss", train_loss_ema, epoch + 1)
+    writer.add_scalar("Test/Loss", test_loss, epoch + 1)
+    writer.add_scalar("Test/Error", 100 - 100. * test_acc, epoch + 1)
 
   test_c_acc = test_c(net, test_data, base_c_path)
   print('Mean Corruption Error: {:.3f}'.format(100 - 100. * test_c_acc))
