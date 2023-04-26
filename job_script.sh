@@ -7,5 +7,5 @@
 
 echo "Job ID: " $SLURM_JOB_ID
 echo "Job Name: " $SLURM_JOB_NAME
-
+pip3 install --user pip setuptools -r requirements.txt
 python3 cifar.py --num-workers=1 --model=$1 --optimizer=$2 --scheduler=$3
