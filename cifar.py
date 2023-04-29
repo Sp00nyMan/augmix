@@ -404,7 +404,7 @@ def main():
   if args.scheduler == "exp":
     scheduler = torch.optim.lr_scheduler.LambdaLR(
         optimizer,
-        lr_lambda=lambda epoch: args.learning_rate / epoch)
+        lr_lambda=lambda epoch: max(1e-3, args.learning_rate * 0.95**epoch))
   elif args.scheduler == "cosine":
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
       optimizer,
