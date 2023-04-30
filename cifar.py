@@ -13,6 +13,7 @@
 # limitations under the License.
 # ==============================================================================
 
+#TODO TRAINING OF CONVNEXT AND RESNET SGD https://juliusruseckas.github.io/ml/convnext-cifar10.html
 """Main script to launch AugMix training on CIFAR-10/100.
 
 Supports WideResNet, AllConv, ResNeXt models on CIFAR-10 and CIFAR-100 as well
@@ -31,10 +32,11 @@ import time
 import augmentations
 from models.cifar.allconv import AllConvNet
 import numpy as np
+from third_party.ConvNeXt_ResNet.models.convnext import convnext_tiny
 from third_party.ResNeXt_DenseNet.models.densenet import densenet
 from third_party.ResNeXt_DenseNet.models.resnext import resnext29
 from third_party.WideResNet_pytorch.wideresnet import WideResNet
-from torchvision.models import resnet18, convnext_tiny
+from torchvision.models import resnet18
 
 import torch
 import torch.backends.cudnn as cudnn
@@ -59,6 +61,11 @@ parser.add_argument(
     default='wrn',
     choices=['wrn', 'allconv', 'densenet', 'resnext', 'resnet18', 'convnext'],
     help='Choose architecture.')
+parser.add_argument(
+    '--pre-trained',
+    type=bool,
+    default=False,
+    help="Load Pre-trained weights for ResNet18/ConvNeXt_tiny")
 # Optimization options
 parser.add_argument(
     '--epochs', '-e', type=int, default=100, help='Number of epochs to train.')
@@ -352,9 +359,9 @@ def main():
   elif args.model == 'resnext':
     net = resnext29(num_classes=num_classes)
   elif args.model == 'resnet18':
-    net = resnet18(num_classes=num_classes)
+    net = resnet18(pretrained=args.pre_trained)
   elif args.model == 'convnext':
-    net = convnext_tiny(num_classes=num_classes)
+    net = convnext_tiny(args.pre_trained)
 
   if args.optimizer == "SGD":
     optimizer = torch.optim.SGD(
@@ -450,10 +457,11 @@ def main():
           100 - 100. * test_acc,
       ))
 
-    print('Epoch {0:3d} | Time {1:5d} | Train Loss {2:.4f} | Test Loss {3:.3f} | '
-          'Test Error {4:.2f}'
-          .format((epoch + 1), int(time.time() - begin_time), train_loss_ema,
-                  test_loss, 100 - 100. * test_acc))
+    print(
+        'Epoch {0:3d} | Time {1:5d} | Train Loss {2:.4f} | Test Loss {3:.3f} |'
+        ' Test Error {4:.2f}'
+        .format((epoch + 1), int(time.time() - begin_time), train_loss_ema,
+                test_loss, 100 - 100. * test_acc))
 
     writer.add_scalar("Train/Loss", train_loss_ema, epoch + 1)
     writer.add_scalar("Test/Loss", test_loss, epoch + 1)
