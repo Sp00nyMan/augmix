@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
+
+#TODO TRAINING OF CONVNEXT AND RESNET SGD https://juliusruseckas.github.io/ml/convnext-cifar10.html
 """Main script to launch AugMix training on CIFAR-10/100.
 
 Supports WideResNet, AllConv, ResNeXt models on CIFAR-10 and CIFAR-100 as well
@@ -398,10 +400,11 @@ def main():
     test_c_acc = test_c(net, test_data, base_c_path)
     print('Mean Corruption Error: {:.3f}'.format(100 - 100. * test_c_acc))
     return
+
   if args.scheduler == "exp":
     scheduler = torch.optim.lr_scheduler.LambdaLR(
         optimizer,
-        lr_lambda=lambda epoch: args.learning_rate * np.exp(-0.1*epoch))
+        lr_lambda=lambda epoch: max(1e-3, args.learning_rate * 0.95**epoch))
   elif args.scheduler == "cosine":
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
       optimizer,
@@ -463,6 +466,7 @@ def main():
     writer.add_scalar("Train/Loss", train_loss_ema, epoch + 1)
     writer.add_scalar("Test/Loss", test_loss, epoch + 1)
     writer.add_scalar("Test/Error", 100 - 100. * test_acc, epoch + 1)
+    writer.add_scalar(f"LR/{args.scheduler}", scheduler.get_last_lr())
 
   test_c_acc = test_c(net, test_data, base_c_path)
   print('Mean Corruption Error: {:.3f}'.format(100 - 100. * test_c_acc))
