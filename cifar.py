@@ -359,9 +359,9 @@ def main():
   elif args.model == 'resnext':
     net = resnext29(num_classes=num_classes)
   elif args.model == 'resnet18':
-    net = resnet18(pretrained=args.pre_trained)
+    net = resnet18(num_classes=num_classes)
   elif args.model == 'convnext':
-    net = convnext_tiny(args.pre_trained)
+    net = convnext_tiny(num_classes=num_classes)
 
   if args.optimizer == "SGD":
     optimizer = torch.optim.SGD(
