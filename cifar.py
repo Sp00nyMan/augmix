@@ -36,7 +36,7 @@ from third_party.ConvNeXt_ResNet.models.convnext import convnext_tiny
 from third_party.ResNeXt_DenseNet.models.densenet import densenet
 from third_party.ResNeXt_DenseNet.models.resnext import resnext29
 from third_party.WideResNet_pytorch.wideresnet import WideResNet
-from torchvision.models import resnet18
+from torchvision.models import resnet18, convnext_tiny
 
 import torch
 import torch.backends.cudnn as cudnn
