@@ -13,7 +13,6 @@
 # limitations under the License.
 # ==============================================================================
 
-#TODO TRAINING OF CONVNEXT AND RESNET SGD https://juliusruseckas.github.io/ml/convnext-cifar10.html
 """Main script to launch AugMix training on CIFAR-10/100.
 
 Supports WideResNet, AllConv, ResNeXt models on CIFAR-10 and CIFAR-100 as well
@@ -32,11 +31,10 @@ import time
 import augmentations
 from models.cifar.allconv import AllConvNet
 import numpy as np
-from third_party.ConvNeXt_ResNet.models.convnext import convnext_tiny
 from third_party.ResNeXt_DenseNet.models.densenet import densenet
 from third_party.ResNeXt_DenseNet.models.resnext import resnext29
 from third_party.WideResNet_pytorch.wideresnet import WideResNet
-from torchvision.models import resnet18
+from torchvision.models import resnet18, convnext_tiny
 
 import torch
 import torch.backends.cudnn as cudnn
@@ -359,9 +357,9 @@ def main():
   elif args.model == 'resnext':
     net = resnext29(num_classes=num_classes)
   elif args.model == 'resnet18':
-    net = resnet18(pretrained=args.pre_trained)
+    net = resnet18(num_classes=num_classes)
   elif args.model == 'convnext':
-    net = convnext_tiny(args.pre_trained)
+    net = convnext_tiny(num_classes=num_classes)
 
   if args.optimizer == "SGD":
     optimizer = torch.optim.SGD(
@@ -466,7 +464,6 @@ def main():
     writer.add_scalar("Train/Loss", train_loss_ema, epoch + 1)
     writer.add_scalar("Test/Loss", test_loss, epoch + 1)
     writer.add_scalar("Test/Error", 100 - 100. * test_acc, epoch + 1)
-    writer.add_scalar(f"LR/{args.scheduler}", scheduler.get_last_lr())
 
   test_c_acc = test_c(net, test_data, base_c_path)
   print('Mean Corruption Error: {:.3f}'.format(100 - 100. * test_c_acc))
