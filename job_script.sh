@@ -3,6 +3,7 @@
 #SBATCH --gpus=1
 #SBATCH --time=2:00:00
 #SBATCH --nodes=1
+#SBATCH --mem=10000
 
 module load miniconda3
 source ~/.bashrc
