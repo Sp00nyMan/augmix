@@ -366,7 +366,6 @@ def test_p(net, base_path, num_classes=10):
   for perturbation in PERTURBATIONS:
     dataset = torch.from_numpy(np.float32(
       np.load(os.path.join(base_path, perturbation + '.npy')).transpose((0,1,4,2,3))))/255.
-    print(f"LOADED DATASET {perturbation}")
     
     ood_data = torch.utils.data.TensorDataset(dataset, dummy_targets)
 
@@ -377,11 +376,9 @@ def test_p(net, base_path, num_classes=10):
         num_workers=args.num_workers,
         pin_memory=True
     )
-    print(f"CREATED DATALOADER")
 
     predictions, ranks = [], []
     net.eval()
-    print(f"NET EVAL")
     with torch.no_grad():
       for data in test_loader:
         num_vids = data.size(0)
@@ -501,11 +498,11 @@ def main():
 
   if args.evaluate:
     # Evaluate clean accuracy first because test_c mutates underlying data
-    test_loss, test_acc = test(net, test_loader)
-    print(f'Clean\tTest Loss {test_loss:.3f} | Test Error {100 - 100. * test_acc:.2f}')
+    # test_loss, test_acc = test(net, test_loader)
+    # print(f'Clean\tTest Loss {test_loss:.3f} | Test Error {100 - 100. * test_acc:.2f}')
 
-    test_c_acc = test_c(net, test_data, base_c_path)
-    print(f'Mean Corruption Error:\t{100 - 100. * test_c_acc:.3f}')
+    # test_c_acc = test_c(net, test_data, base_c_path)
+    # print(f'Mean Corruption Error:\t{100 - 100. * test_c_acc:.3f}')
 
     test_p_FP = test_p(net, base_c_path[:-2] + "P/", num_classes)
     print(f'Mean Flipping Prob\t{np.mean(test_p_FP):.5f}')
