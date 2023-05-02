@@ -157,14 +157,16 @@ CORRUPTIONS = [
     'gaussian_noise', 'shot_noise', 'impulse_noise', 'defocus_blur',
     'glass_blur', 'motion_blur', 'zoom_blur', 'snow', 'frost', 'fog',
     'brightness', 'contrast', 'elastic_transform', 'pixelate',
-    'jpeg_compression'
+    'jpeg_compression', 
+    'spatter', 'gaussian_blur', 'saturate', 'speckle_noice'
 ]
-
-
-def get_lr(step, total_steps, lr_max, lr_min):
-  """Compute learning rate according to cosine annealing schedule."""
-  return lr_min + (lr_max - lr_min) * 0.5 * (1 +
-                                             np.cos(step / total_steps * np.pi))
+PERTURBATIONS = [
+    'gaussian_noise', 'gaussian_noise_2', 'gaussian_noise_3', 
+    'shot_noise', 'shot_noise_2', 'shot_noise_3', 
+    'speckle_noise', 'speckle_noise_2', 'speckle_noise_3',
+    'brightness', 'rotate', 'snow', 'translate', 'gaussian_blur', 'scale', 'spatter',
+    'zoom_blur', 'motion_blur', 'shear', 'tilt'
+]
 
 
 def aug(image, preprocess):
@@ -359,6 +361,7 @@ def main():
   elif args.model == 'resnet18':
     net = resnet18(num_classes=num_classes)
   elif args.model == 'convnext':
+    print(num_classes)
     net = convnext_tiny(num_classes=num_classes)
 
   if args.optimizer == "SGD":

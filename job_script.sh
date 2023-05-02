@@ -1,13 +1,14 @@
 #!/bin/bash
 #SBATCH --partition=gpu
 #SBATCH --gpus=1
-#SBATCH --time=5:00:00
+#SBATCH --time=6:00:00
 #SBATCH --nodes=1
 
+module load miniconda3
+source ~/.bashrc
+conda deactivate
+conda activate torch
 
-module load python
-pip install --user -r requirements.txt
-pip freeze
 echo "-----------------------------------------------------------------------------------------"
 
 echo "Job ID: " $SLURM_JOB_ID
