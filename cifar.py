@@ -318,7 +318,7 @@ def dist(sigma, mode='top5', num_classes=10):
 
 def ranking_dist(ranks, noise_perturbation=False, mode='top5'):
   result = 0
-  step_size = 1 if noise_perturbation else args.difficulty
+  step_size = 1
 
   for vid_ranks in ranks:
       result_for_vid = []
@@ -340,7 +340,7 @@ def ranking_dist(ranks, noise_perturbation=False, mode='top5'):
 
 def flip_prob(predictions, noise_perturbation=False):
   result = 0
-  step_size = 1 if noise_perturbation else args.difficulty
+  step_size = 1
 
   for vid_preds in predictions:
       result_for_vid = []
@@ -494,11 +494,11 @@ def main():
 
   if args.evaluate:
     # Evaluate clean accuracy first because test_c mutates underlying data
-    # test_loss, test_acc = test(net, test_loader)
-    # print(f'Clean\tTest Loss {test_loss:.3f} | Test Error {100 - 100. * test_acc:.2f}')
+    test_loss, test_acc = test(net, test_loader)
+    print(f'Clean\tTest Loss {test_loss:.3f} | Test Error {100 - 100. * test_acc:.2f}')
 
-    # test_c_acc = test_c(net, test_data, base_c_path)
-    # print(f'Mean Corruption Error:\t{100 - 100. * test_c_acc:.3f}')
+    test_c_acc = test_c(net, test_data, base_c_path)
+    print(f'Mean Corruption Error:\t{100 - 100. * test_c_acc:.3f}')
 
     test_p_FP = test_p(net, base_c_path[:-2] + "P/", num_classes)
     print(f'Mean Flipping Prob\t{np.mean(test_p_FP):.5f}')
