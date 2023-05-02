@@ -384,6 +384,7 @@ def test_p(net, base_path, num_classes=10):
     with torch.no_grad():
       for data in test_loader:
         num_vids = data.size(0)
+        print(f"Loading Data to CUDA")
         data = data.view(-1, 3, 32, 32).cuda()
         print(f"Loaded Data to CUDA")
         logits = net(data * 2 - 1)
