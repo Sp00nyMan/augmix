@@ -14,4 +14,4 @@ echo "--------------------------------------------------------------------------
 echo "Job ID: " $SLURM_JOB_ID
 echo "Job Name: " $SLURM_JOB_NAME
 
-python cifar.py --num-workers=1 --model=$1 --optimizer=$2 --scheduler=$3 --resume=$4
+python cifar.py --num-workers=1 --model=$1 --optimizer=$2 --scheduler=$3 --resume=$4 --evaluate
