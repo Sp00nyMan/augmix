@@ -5,8 +5,9 @@
 #SBATCH --nodes=1
 
 module load miniconda3
-conda activate base
-conda install pytorch=2.0.0 torchvision torchaudio pytorch-cuda=11.7 -c pytorch -c nvidia
+conda create --name torch
+conda activate torch
+conda install --yes pytorch=2.0.0 torchvision torchaudio pytorch-cuda=11.7 -c pytorch -c nvidia
 
 echo "-----------------------------------------------------------------------------------------"
 
