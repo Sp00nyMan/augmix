@@ -159,7 +159,7 @@ CORRUPTIONS = [
     'glass_blur', 'motion_blur', 'zoom_blur', 'snow', 'frost', 'fog',
     'brightness', 'contrast', 'elastic_transform', 'pixelate',
     'jpeg_compression', 
-    'spatter', 'gaussian_blur', 'saturate', 'speckle_noise'
+    'spatter', 'gaussian_blur', 'saturate'
 ]
 PERTURBATIONS = [
     'gaussian_noise', 'gaussian_noise_2', 'gaussian_noise_3', 
