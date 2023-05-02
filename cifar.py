@@ -381,6 +381,7 @@ def test_p(net, base_path, num_classes=10):
 
     predictions, ranks = [], []
     net.eval()
+    print(f"NET EVAL")
     with torch.no_grad():
       for data in test_loader:
         num_vids = data.size(0)
