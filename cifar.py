@@ -338,7 +338,6 @@ def ranking_dist(ranks, noise_perturbation=False, mode='top5'):
 
   return result
 
-
 def flip_prob(predictions, noise_perturbation=False):
   result = 0
   step_size = 1 if noise_perturbation else args.difficulty
@@ -359,6 +358,7 @@ def flip_prob(predictions, noise_perturbation=False):
 
 def test_p(net, base_path, num_classes=10):
   """Evaluate network on given perturbations dataset."""
+  print("EVALUATING ON CIFAR-10-P")
   dummy_targets = torch.LongTensor(np.random.randint(0, num_classes, (10000,)))
 
   flip_list = []
@@ -366,6 +366,7 @@ def test_p(net, base_path, num_classes=10):
   for perturbation in PERTURBATIONS:
     dataset = torch.from_numpy(np.float32(
       np.load(os.path.join(base_path, perturbation + '.npy')).transpose((0,1,4,2,3))))/255.
+    print(f"LOADED DATASET {perturbation}")
     
     ood_data = torch.utils.data.TensorDataset(dataset, dummy_targets)
 
@@ -376,6 +377,8 @@ def test_p(net, base_path, num_classes=10):
         num_workers=args.num_workers,
         pin_memory=True
     )
+    print(f"CREATED DATALOADER")
+
     predictions, ranks = [], []
     net.eval()
     with torch.no_grad():
@@ -390,16 +393,22 @@ def test_p(net, base_path, num_classes=10):
           ranks.append([np.uint16(rankdata(-frame, method='ordinal')) for frame in vid.to('cpu').numpy()])
       ranks = np.array(ranks)
 
+      print("FINISHED PREDICTION")
+
       current_flip = flip_prob(predictions, 'noise' in perturbation)
       current_zipf = ranking_dist(ranks, 'noise' in perturbation, mode='zipf')
+
+      print("CALCULATED METRICS")
 
       flip_list.append(current_flip)
       zipf_list.append(current_zipf)
 
-      print('\n' + perturbation, 'Flipping Prob')
+      print(perturbation, 'Flipping Prob')
       print(current_flip)
+      print("--------------------------------------------------------------------------------")
 
   return flip_list
+
 
 def main():
   torch.manual_seed(1)
@@ -490,11 +499,10 @@ def main():
   if args.evaluate:
     # Evaluate clean accuracy first because test_c mutates underlying data
     test_loss, test_acc = test(net, test_loader)
-    print('Clean\n\tTest Loss {:.3f} | Test Error {:.2f}'.format(
-        test_loss, 100 - 100. * test_acc))
+    print(f'Clean\tTest Loss {test_loss:.3f} | Test Error {100 - 100. * test_acc:.2f}')
 
     test_c_acc = test_c(net, test_data, base_c_path)
-    print('Mean Corruption Error: {:.3f}'.format(100 - 100. * test_c_acc))
+    print(f'Mean Corruption Error:\t{100 - 100. * test_c_acc:.3f}')
 
     test_p_FP = test_p(net, base_c_path[:-2] + "P/", num_classes)
     print(f'Mean Flipping Prob\t{np.mean(test_p_FP):.5f}')
