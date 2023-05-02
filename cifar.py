@@ -31,6 +31,7 @@ import time
 import augmentations
 from models.cifar.allconv import AllConvNet
 import numpy as np
+from scipy.stats import rankdata
 from third_party.ResNeXt_DenseNet.models.densenet import densenet
 from third_party.ResNeXt_DenseNet.models.resnext import resnext29
 from third_party.WideResNet_pytorch.wideresnet import WideResNet
@@ -306,6 +307,100 @@ def test_c(net, test_data, base_path):
   return np.mean(corruption_accs)
 
 
+## Evaluation code for CIFAR-10-P is taken from https://github.com/hendrycks/robustness
+def dist(sigma, mode='top5', num_classes=10):
+  cum_sum_top5 = np.cumsum(np.array([0] + [1] * 5 + [0] * (num_classes-1 - 5)))
+  recip = 1./np.array(range(1, num_classes+1))
+  if mode == 'top5':
+      return np.sum(np.abs(cum_sum_top5[:5] - cum_sum_top5[sigma-1][:5]))
+  elif mode == 'zipf':
+      return np.sum(np.abs(recip - recip[sigma-1])*recip)
+
+def ranking_dist(ranks, noise_perturbation=False, mode='top5'):
+  result = 0
+  step_size = 1 if noise_perturbation else args.difficulty
+
+  for vid_ranks in ranks:
+      result_for_vid = []
+
+      for i in range(step_size):
+          perm1 = vid_ranks[i]
+          perm1_inv = np.argsort(perm1)
+
+          for rank in vid_ranks[i::step_size][1:]:
+              perm2 = rank
+              result_for_vid.append(dist(perm2[perm1_inv], mode))
+              if not noise_perturbation:
+                  perm1 = perm2
+                  perm1_inv = np.argsort(perm1)
+
+      result += np.mean(result_for_vid) / len(ranks)
+
+  return result
+
+
+def flip_prob(predictions, noise_perturbation=False):
+  result = 0
+  step_size = 1 if noise_perturbation else args.difficulty
+
+  for vid_preds in predictions:
+      result_for_vid = []
+
+      for i in range(step_size):
+          prev_pred = vid_preds[i]
+
+          for pred in vid_preds[i::step_size][1:]:
+              result_for_vid.append(int(prev_pred != pred))
+              if not noise_perturbation: prev_pred = pred
+
+      result += np.mean(result_for_vid) / len(predictions)
+
+  return result
+
+def test_p(net, base_path, num_classes=10):
+  """Evaluate network on given perturbations dataset."""
+  dummy_targets = torch.LongTensor(np.random.randint(0, num_classes, (10000,)))
+
+  flip_list = []
+  zipf_list = []
+  for perturbation in PERTURBATIONS:
+    dataset = torch.from_numpy(np.float32(
+      np.load(os.path.join(base_path, perturbation + '.npy')).transpose((0,1,4,2,3))))/255.
+    
+    ood_data = torch.utils.data.TensorDataset(dataset, dummy_targets)
+
+    test_loader = torch.utils.data.DataLoader(
+        dataset,
+        batch_size=args.eval_batch_size,
+        shuffle=False,
+        num_workers=args.num_workers,
+        pin_memory=True
+    )
+    predictions, ranks = [], []
+    net.eval()
+    with torch.no_grad():
+      for data in test_loader:
+        num_vids = data.size(0)
+        data = data.view(-1, 3, 32, 32).cuda()
+
+        logits = net(data * 2 - 1)
+        
+        for vid in logits.view(num_vids, -1, num_classes):
+          predictions.append(vid.argmax(1).to('cpu').numpy())
+          ranks.append([np.uint16(rankdata(-frame, method='ordinal')) for frame in vid.to('cpu').numpy()])
+      ranks = np.array(ranks)
+
+      current_flip = flip_prob(predictions, 'noise' in perturbation)
+      current_zipf = ranking_dist(ranks, 'noise' in perturbation, mode='zipf')
+
+      flip_list.append(current_flip)
+      zipf_list.append(current_zipf)
+
+      print('\n' + perturbation, 'Flipping Prob')
+      print(current_flip)
+
+  return flip_list
+
 def main():
   torch.manual_seed(1)
   np.random.seed(1)
@@ -400,6 +495,9 @@ def main():
 
     test_c_acc = test_c(net, test_data, base_c_path)
     print('Mean Corruption Error: {:.3f}'.format(100 - 100. * test_c_acc))
+
+    test_p_FP = test_p(net, base_c_path[:-2] + "P/", num_classes)
+    print(f'Mean Flipping Prob\t{np.mean(test_p_FP):.5f}')
     return
 
   if args.scheduler == "exp":
