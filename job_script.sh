@@ -5,6 +5,7 @@
 #SBATCH --nodes=1
 
 module load miniconda3
+source ~/.bashrc
 conda deactivate
 conda activate torch
 
