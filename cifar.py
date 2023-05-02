@@ -364,6 +364,7 @@ def test_p(net, base_path, num_classes=10):
   flip_list = []
   zipf_list = []
   for perturbation in PERTURBATIONS:
+    print(f"EVALUATING WITH {perturbation}")
     dataset = torch.from_numpy(np.float32(
       np.load(os.path.join(base_path, perturbation + '.npy')).transpose((0,1,4,2,3))))/255.
     
@@ -380,27 +381,20 @@ def test_p(net, base_path, num_classes=10):
     predictions, ranks = [], []
     net.eval()
     with torch.no_grad():
-      print("TORCH NO-GRAD")
       for data in test_loader:
-        print("BATCH")
         num_vids = data.size(0)
-        print(f"Loading Data to CUDA")
         data = data.view(-1, 3, 32, 32).cuda()
-        print(f"Loaded Data to CUDA")
         logits = net(data * 2 - 1)
-        print(f"Evaluated the data")
         
         for vid in logits.view(num_vids, -1, num_classes):
           predictions.append(vid.argmax(1).to('cpu').numpy())
           ranks.append([np.uint16(rankdata(-frame, method='ordinal')) for frame in vid.to('cpu').numpy()])
       ranks = np.array(ranks)
 
-      print("FINISHED PREDICTION")
 
       current_flip = flip_prob(predictions, 'noise' in perturbation)
       current_zipf = ranking_dist(ranks, 'noise' in perturbation, mode='zipf')
 
-      print("CALCULATED METRICS")
 
       flip_list.append(current_flip)
       zipf_list.append(current_zipf)
