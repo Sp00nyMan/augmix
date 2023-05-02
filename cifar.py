@@ -359,7 +359,7 @@ def flip_prob(predictions, noise_perturbation=False):
 def test_p(net, base_path, num_classes=10):
   """Evaluate network on given perturbations dataset."""
   print("EVALUATING ON CIFAR-10-P")
-  dummy_targets = torch.LongTensor(np.random.randint(0, num_classes, (10000,)))
+  # dummy_targets = torch.LongTensor(np.random.randint(0, num_classes, (10000,)))
 
   flip_list = []
   zipf_list = []
@@ -367,7 +367,7 @@ def test_p(net, base_path, num_classes=10):
     dataset = torch.from_numpy(np.float32(
       np.load(os.path.join(base_path, perturbation + '.npy')).transpose((0,1,4,2,3))))/255.
     
-    ood_data = torch.utils.data.TensorDataset(dataset, dummy_targets)
+    # ood_data = torch.utils.data.TensorDataset(dataset, dummy_targets)
 
     test_loader = torch.utils.data.DataLoader(
         dataset,
