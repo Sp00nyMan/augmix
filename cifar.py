@@ -385,8 +385,9 @@ def test_p(net, base_path, num_classes=10):
       for data in test_loader:
         num_vids = data.size(0)
         data = data.view(-1, 3, 32, 32).cuda()
-
+        print(f"Loaded Data to CUDA")
         logits = net(data * 2 - 1)
+        print(f"Evaluated the data")
         
         for vid in logits.view(num_vids, -1, num_classes):
           predictions.append(vid.argmax(1).to('cpu').numpy())
