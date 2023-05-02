@@ -380,7 +380,9 @@ def test_p(net, base_path, num_classes=10):
     predictions, ranks = [], []
     net.eval()
     with torch.no_grad():
+      print("TORCH NO-GRAD")
       for data in test_loader:
+        print("BATCH")
         num_vids = data.size(0)
         print(f"Loading Data to CUDA")
         data = data.view(-1, 3, 32, 32).cuda()
